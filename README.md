@@ -6,7 +6,8 @@ can be tried [here](http://bogglegoggle.sytes.net/boggle/game) -> do read sectio
 
 1. [API](#api)
 2. [Frontend](#frontend)
-3. [Details](#details)
+3. [Design Details](#design-detail)
+4. [Application Detail](#application-detail)
 
 ---------------------
 

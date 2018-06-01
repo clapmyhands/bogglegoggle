@@ -6,8 +6,9 @@ can be tried [here](http://bogglegoggle.sytes.net/boggle/game) -> do read sectio
 
 1. [API](#api)
 2. [Frontend](#frontend)
-3. [Design Details](#design-detail)
-4. [Application Detail](#application-detail)
+3. [Setup](#setup)
+4. [Design Details](#design-details)
+5. [Application Detail](#application-detail)
 
 ---------------------
 
@@ -234,6 +235,39 @@ Create a new match entry in the database. This entry records all things related 
 
 ## Frontend
 
+## Setup
+
+* **Project Structure**
+  ```
+  bogglegoggle
+  |-- asset
+  |-- boggle
+  | |-- static
+  | | |-- CSS
+  | |-- templates
+  |-- boggle.db
+  ```
+
+* **setup instructions**
+
+  Clone this repository.
+
+  Create `boggle.db` inside project folder. you can do like so:
+  
+  ```sqlite3 boggle.db```
+  
+  then run this to create the table:
+  
+  ```CREATE TABLE match(match_id TEXT PRIMARY KEY, board TEXT, p1_name TEXT, p1_words TEXT, p1_score INTEGER, p2_name TEXT, p2_words TEXT, p2_score INTEGER);```
+  
+  point your `FLASK_APP` to `boggle/app.py`.
+  
+  Have redis running at default `port 6379`.
+  
+  run with `flask run` and application will run on default port 5000
+  
+  Accessing through browser(`<host>/boggle/game`) would need to change API URL host to `127.0.0.1` or `localhost` at port 5000
+
 ## Design Details
 
 * **Get random board**
@@ -266,7 +300,7 @@ Create a new match entry in the database. This entry records all things related 
   
   Currently redis is used more like a cache.
 
-* **Database Usage
+* **Database Usage**
   
   Only Match information is stored in database. We can also store score information(currently only based on word length). We can also store Dictionary and even have multiple language dictionary.
   

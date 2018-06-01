@@ -118,7 +118,7 @@
                 return false;
             }
             httpRequest.onreadystatechange = processBoard;
-            httpRequest.open('GET','http://127.0.0.1:5000/api/v1.0/boggle/boards');
+            httpRequest.open('GET','http://bogglegoggle.sytes.net/api/v1.0/boggle/boards');
             httpRequest.send();
         }
 
@@ -168,7 +168,7 @@
                 return false;
             }
 
-            var url = 'http://127.0.0.1:5000/api/v1.0/boggle/boards/' + board_string + "/word/" + word;
+            var url = 'http://bogglegoggle.sytes.net/api/v1.0/boggle/boards/' + board_string + "/word/" + word;
             httpRequest.onreadystatechange = findWord;
             httpRequest.open('GET',url);
             httpRequest.send();
@@ -279,7 +279,7 @@
                 return false;
             }
             httpRequest.onreadystatechange = setNewMatchId;
-            httpRequest.open('POST','http://127.0.0.1:5000/api/v1.0/boggle/matches');
+            httpRequest.open('POST','http://bogglegoggle.sytes.net/api/v1.0/boggle/matches');
             httpRequest.send();
         }
 
@@ -307,7 +307,7 @@
                 return false;
             }
             httpRequest.onreadystatechange = showMatchStatus;
-            httpRequest.open('GET','http://127.0.0.1:5000/api/v1.0/boggle/matches/'+match_id_input);
+            httpRequest.open('GET','http://bogglegoggle.sytes.net/api/v1.0/boggle/matches/'+match_id_input);
             httpRequest.send();
         }
 
@@ -376,7 +376,7 @@
             }
             httpRequest.onreadystatechange = setupMatch;
             var match_id_input = document.getElementById('match-id-input').value;
-            httpRequest.open('POST','http://127.0.0.1:5000/api/v1.0/boggle/matches/'+match_id_input+'/session');
+            httpRequest.open('POST','http://bogglegoggle.sytes.net/api/v1.0/boggle/matches/'+match_id_input+'/session');
             httpRequest.send();
         }
 
@@ -417,7 +417,7 @@
                 return false;
             }
             httpRequest.onreadystatechange = finishUpdatingMatch;
-            httpRequest.open('PUT','http://127.0.0.1:5000/api/v1.0/boggle/matches/'+match_id);
+            httpRequest.open('PUT','http://bogglegoggle.sytes.net/api/v1.0/boggle/matches/'+match_id);
             httpRequest.setRequestHeader("Content-type", "application/json");
             httpRequest.send(JSON.stringify(data));
         }

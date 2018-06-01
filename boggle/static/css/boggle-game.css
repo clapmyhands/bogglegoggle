@@ -1,0 +1,43 @@
+.boggle-board {
+    margin-left: auto;
+    margin-right: auto;
+    border-collapse: collapse;
+    height: 400px;
+    width: 400px;
+}
+
+.boggle-board td{
+    border: 2px solid #222;
+    text-align: center;
+    vertical-align: middle;
+    height: 25%;
+    width: 25%;
+}
+
+.boggle-scoreboard{
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.boggle-scoretotal{
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.match-info-table{
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+}
+
+.match-info-table th{
+    width: 100px;
+}
+.match-info-table td{
+    width: auto;
+}
+
+#match-status-content{
+    text-align: center;
+}

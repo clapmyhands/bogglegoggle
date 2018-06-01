@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Single Player Boggle</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/boggle-game.css')}}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <ul class="navbar-nav mr-auto">
+            <li>
+                <button type="button" class="btn btn-primary" id="get-new-board-btn">Practice</button>
+                <button type="button" class="btn btn-primary" data-toggle="modal"
+                        data-target="#matchModal" id="match-btn" class="button">Match</button>
+            </li>
+        </ul>
+        <form id="matchInterface" class="collapse my-2 my-lg-0 form-inline">
+            <input id="match-name-input" placeholder="Name" class="mr-sm-2">
+            <button type="button" class="btn btn-secondary my-2 my-sm-0" id="finish-match-btn">
+                Finish
+            </button>
+        </form>
+    </nav>
+
+    <div class="modal fade" id="matchModal" tabindex="-1" role="dialog" aria-labelledby="matchModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="matchModalLabel">Match</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <button type="button" class="btn btn-primary match-btn-action"
+                            id="create-match-btn">
+                        Create
+                    </button>
+                    <input type="text" id="match-id-input" placeholder="Match ID">
+                    <button type="button" class="btn btn-primary match-btn-action"
+                            id="join-match-btn" data-dismiss="modal">
+                        Join
+                    </button>
+                    <button type="button" class="btn btn-primary match-btn-action" data-toggle="modal"
+                            data-target="#matchStatusModal" id="match-status-btn" data-dismiss="modal">
+                        Status
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="matchStatusModal" tabindex="-1" role="dialog" aria-labelledby="matchModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="matchStatusModalLabel">Match</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body justify-content-center" id="match-status-content">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="boggle-root" class="jumbotron">
+        <div class="container justify-content-center">
+            <div class="row my-2 justify-content-center">
+                <div class="col-6 justify-content-center" id="board-main">
+                </div>
+            </div>
+            <div class="row justify-content-center my-2">
+                <div class="col-4">
+                    <form class="justify-content-center form-inline" id="find-word-form">
+                        <input type="text" id="find-word-input" class="form-control mr-sm-2">
+                        <button type="button" id="find-word-btn" class="btn">Find</button>
+                    </form>
+                </div>
+            </div>
+            <div class="row justify-content-center my-2">
+                <div class="col justify-content-center" id="scoreboard-root">
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        var new_board = document.getElementById("get-new-board-btn");
+        var find_word_button = document.getElementById('find-word-btn');
+
+        var board_string;
+        var httpRequest;
+        var match_id;
+
+        var word_list = [];
+        var total_score = 0;
+
+        new_board.addEventListener('click', playBoggle);
+        function playBoggle() {
+            word_list = [];
+            total_score = 0;
+
+            httpRequest = new XMLHttpRequest();
+
+            if(!httpRequest){
+                alert('cannot create XMLHTTP instance');
+                return false;
+            }
+            httpRequest.onreadystatechange = processBoard;
+            httpRequest.open('GET','http://127.0.0.1:5000/api/v1.0/boggle/boards');
+            httpRequest.send();
+        }
+
+        function processBoard(){
+            if(httpRequest.readyState === XMLHttpRequest.DONE){
+                if(httpRequest.status === 200){
+                    var response = JSON.parse(httpRequest.responseText);
+                    board_string = response["board_string"];
+                    var board = boardStringToArray(board_string);
+
+                    clearBoggleBoard();
+                    var board_main = document.getElementById("board-main");
+                    drawBoard(board, board_main);
+                    drawScoreboard();
+                } else {
+                    alert("Problem with request")
+                }
+            }
+        }
+
+        function clearBoggleBoard(){
+            removeAllChild(document.getElementById("board-main"));
+            removeAllChild(document.getElementById('scoreboard-root'));
+            document.getElementById("find-word-input").value="";
+        }
+
+        find_word_button.addEventListener('click', checkWord);
+        document.getElementById('find-word-form').addEventListener('submit', function(event){
+            event.preventDefault();
+            checkWord();
+        });
+        function checkWord(){
+            var word = document.getElementById('find-word-input').value;
+            document.getElementById('find-word-input').value = "";
+            if(board_string === undefined){
+                alert("no current board");
+                return false;
+            }
+            if(word_list.includes(word)){
+                return false; //do nothing if already in found wordlist
+            }
+
+            httpRequest = new XMLHttpRequest();
+
+            if(!httpRequest){
+                alert('cannot create XMLHTTP instance');
+                return false;
+            }
+
+            var url = 'http://127.0.0.1:5000/api/v1.0/boggle/boards/' + board_string + "/word/" + word;
+            httpRequest.onreadystatechange = findWord;
+            httpRequest.open('GET',url);
+            httpRequest.send();
+        }
+
+        function findWord(){
+            if(httpRequest.readyState === XMLHttpRequest.DONE){
+                if(httpRequest.status === 200){
+                    var response = JSON.parse(httpRequest.responseText);
+                    var score = response["score"];
+                    var word = response["word"];
+                    if(score > 0){
+                        word_list.push(word);
+                        total_score+=score;
+                        updateScoreboard(word, score)
+                    }
+                } else {
+                    alert("Problem with request")
+                }
+            }
+        }
+
+        function drawBoard(board, board_main){
+            var tbody = document.createElement('table');
+            tbody.setAttribute("class","boggle-board");
+
+            var i,j;
+            for(i=0; i<board.length; i++){
+                var tr = document.createElement('tr');
+                for(j=0; j<board[0].length; j++){
+                    var td = document.createElement('td');
+                    var head = document.createElement('h3');
+                    var textNode = document.createTextNode(board[i][j]);
+                    head.appendChild(textNode);
+                    td.appendChild(head);
+                    tr.appendChild(td);
+                }
+                tbody.appendChild(tr);
+            }
+            board_main.appendChild(tbody);
+        }
+
+        function drawScoreboard(){
+            var scoreboard = document.getElementById('scoreboard-root');
+
+            var scoreboard_total = document.createElement('div');
+            scoreboard_total.setAttribute('id','scoreboard-total');
+            scoreboard_total.setAttribute('class','boggle-scoretotal');
+
+            var heading = document.createElement('h5');
+
+            var newText = document.createTextNode("Total Score: ");
+            heading.appendChild(newText);
+
+            var total_score_number = document.createElement('span');
+            total_score_number.setAttribute('id','total-score-number');
+            var scoreText = document.createTextNode(total_score);
+            total_score_number.appendChild(scoreText);
+            heading.appendChild(total_score_number);
+
+            scoreboard_total.appendChild(heading);
+            scoreboard.appendChild(scoreboard_total);
+
+            var scoreboard_table = document.createElement('table');
+            scoreboard_table.setAttribute('id', 'scoreboard-table');
+            scoreboard_table.setAttribute("class", "boggle-scoreboard");
+            scoreboard.appendChild(scoreboard_table);
+        }
+
+        function updateScoreboard(word, score){
+            var scoreboard_table = document.getElementById('scoreboard-table');
+            if(scoreboard_table === null){
+                return false;
+            }
+            var tr = document.createElement('tr');
+            // word
+            var td = document.createElement('td');
+            var newText = document.createTextNode(word);
+            td.appendChild(newText);
+            tr.appendChild(td);
+            // score
+            var td = document.createElement('td');
+            var newText = document.createTextNode(score);
+            td.appendChild(newText);
+            tr.appendChild(td);
+
+            scoreboard_table.appendChild(tr);
+
+            var scoreboard_total = document.getElementById('total-score-number');
+            if(scoreboard_total.lastChild){
+                scoreboard_total.removeChild(scoreboard_total.lastChild);
+                newText = document.createTextNode(total_score);
+                scoreboard_total.appendChild(newText);
+            }
+        }
+
+        function removeAllChild(node){
+        while(node.lastChild){
+            node.removeChild(node.lastChild);
+        }
+    }
+
+        document.getElementById('create-match-btn').addEventListener('click', createNewMatch);
+        function createNewMatch(){
+            httpRequest = new XMLHttpRequest();
+            if(!httpRequest){
+                alert('cannot create XMLHTTP instance');
+                return false;
+            }
+            httpRequest.onreadystatechange = setNewMatchId;
+            httpRequest.open('POST','http://127.0.0.1:5000/api/v1.0/boggle/matches');
+            httpRequest.send();
+        }
+
+        function setNewMatchId(){
+            if(httpRequest.readyState === XMLHttpRequest.DONE){
+                if(httpRequest.status === 200){
+                    var response = JSON.parse(httpRequest.responseText);
+                    document.getElementById('match-id-input').value = response["match_id"];
+                } else {
+                    alert("Problem with request")
+                }
+            }
+        }
+
+        document.getElementById('match-status-btn').addEventListener('click',getMatchStatus);
+        function getMatchStatus(){
+            httpRequest = new XMLHttpRequest();
+            if(!httpRequest){
+                alert('cannot create XMLHTTP instance');
+                return false;
+            }
+            var match_id_input = document.getElementById('match-id-input').value;
+            if(match_id_input === ""){
+                alert("need match ID");
+                return false;
+            }
+            httpRequest.onreadystatechange = showMatchStatus;
+            httpRequest.open('GET','http://127.0.0.1:5000/api/v1.0/boggle/matches/'+match_id_input);
+            httpRequest.send();
+        }
+
+        function showMatchStatus(){
+            if(httpRequest.readyState === XMLHttpRequest.DONE){
+                if(httpRequest.status === 200){
+                    var response = JSON.parse(httpRequest.responseText);
+                    var matchStatusRoot = document.getElementById("match-status-content");
+                    removeAllChild(matchStatusRoot);
+
+                    var heading = document.createElement("h5");
+                    var newText = document.createTextNode("Match is "+response["status"]);
+                    heading.appendChild(newText);
+                    matchStatusRoot.appendChild(heading);
+
+                    if(response["status"] === "finished"){
+                        var matchBoardRoot = document.createElement('table');
+                        matchBoardRoot.setAttribute('class','table');
+                        var board = boardStringToArray(response["board_string"]);
+                        drawBoard(board, matchBoardRoot);
+                        matchStatusRoot.appendChild(matchBoardRoot);
+
+                        var rowHead = ["Name", "Words", "Score"];
+                        var playerName = [response["p1_name"], response["p2_name"]];
+                        var playerWords = [response["p1_words"].join(', '), response["p2_words"].join(', ')];
+                        var playerScore = [response["p1_score"], response["p2_score"]];
+                        var tableData = [playerName, playerWords, playerScore];
+                        var matchInfoRoot = document.createElement('table');
+                        matchInfoRoot.setAttribute('class','table table-bordered match-info-table');
+                        for(var i=0; i<tableData.length; i++){
+                            var tr = document.createElement('tr');
+
+                            var thead = document.createElement('th');
+                            thead.setAttribute('scope', 'col');
+                            newText = document.createTextNode(rowHead[i]);
+                            thead.appendChild(newText);
+                            tr.appendChild(thead);
+
+                            for(var j=0; j<tableData[i].length; j++){
+                                var td = document.createElement('td');
+                                newText = document.createTextNode(tableData[i][j]);
+                                td.appendChild(newText);
+                                tr.appendChild(td);
+                            }
+                            matchInfoRoot.appendChild(tr);
+                        }
+                        matchStatusRoot.appendChild(matchInfoRoot);
+
+                    }
+                } else {
+                    alert("Problem with request")
+                }
+            }
+        }
+
+        document.getElementById('join-match-btn').addEventListener('click', joinMatch);
+        function joinMatch(){
+            clearBoggleBoard();
+            word_list = [];
+            total_score = 0;
+
+            httpRequest = new XMLHttpRequest();
+            if(!httpRequest){
+                alert('cannot create XMLHTTP instance');
+                return false;
+            }
+            httpRequest.onreadystatechange = setupMatch;
+            var match_id_input = document.getElementById('match-id-input').value;
+            httpRequest.open('POST','http://127.0.0.1:5000/api/v1.0/boggle/matches/'+match_id_input+'/session');
+            httpRequest.send();
+        }
+
+        function setupMatch(){
+            if(httpRequest.readyState === XMLHttpRequest.DONE){
+                if(httpRequest.status === 200){
+                    var response = JSON.parse(httpRequest.responseText);
+                    match_id = response["match_id"];
+                    board_string = response["board_string"];
+                    var board = boardStringToArray(board_string);
+
+                    var board_main = document.getElementById("board-main");
+                    drawBoard(board, board_main);
+                    drawScoreboard();
+                    $('#matchInterface').collapse('show');
+                } else {
+                    alert("Problem with request")
+                }
+            }
+        }
+
+        document.getElementById("finish-match-btn").addEventListener('click', updateMatch);
+        function updateMatch(){
+            httpRequest = new XMLHttpRequest();
+            if(!httpRequest){
+                alert('cannot create XMLHTTP instance');
+                return false;
+            }
+            var name = document.getElementById("match-name-input").value;
+            if(name===""){
+                alert('cannot have empty name');
+                return false;
+            }
+            console.log(word_list);
+            var data = {"name": name, "words": word_list};
+            if(match_id === ""){
+                alert("need match ID");
+                return false;
+            }
+            httpRequest.onreadystatechange = finishUpdatingMatch;
+            httpRequest.open('PUT','http://127.0.0.1:5000/api/v1.0/boggle/matches/'+match_id);
+            httpRequest.setRequestHeader("Content-type", "application/json");
+            httpRequest.send(JSON.stringify(data));
+        }
+
+        function finishUpdatingMatch(){
+            if(httpRequest.readyState === XMLHttpRequest.DONE){
+                if(httpRequest.status === 200){
+                    var response = JSON.parse(httpRequest.responseText);
+                    if(response["status"] === "finished"){
+                        alert("match finished")
+                    } else {
+                        alert("match updated");
+                    }
+                    clearBoggleBoard();
+                    match_id = "";
+                    document.getElementById("match-name-input").value = "";
+                    $('#matchInterface').collapse('hide');
+                } else {
+                    alert("Problem with request")
+                }
+            }
+        }
+
+        function boardStringToArray(board_string){
+            var board_array = board_string.split('');
+            var board=[], i, k;
+            for(i=0, k=-1; i<board_array.length; i++){
+                if(i%4 === 0){
+                    k++;
+                    board[k] = [];
+                }
+                board[k].push(board_array[i]);
+            }
+            return board;
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

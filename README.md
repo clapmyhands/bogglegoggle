@@ -235,6 +235,64 @@ Create a new match entry in the database. This entry records all things related 
 
 ## Frontend
 
+  When you first open the site, you'll be greeted with the landing page.
+
+  **Landing Page**
+
+  ![](screenshot/landing.png)
+  
+  Press the `Practice` button to get a random board which you can play with.
+  After pressing `Practice`, the page will show a boggle board.
+  
+  **Board**
+  
+  <img src="./screenshot/board.png" height="400px">
+  
+  you can start playing by entering words in the input box below the board.
+  If the word is valid, the scoreboard below it will get updated.
+  
+  <img src="./screenshot/scoreboard.png" height="200px">
+  
+  Press `Match` in the navigation bar on top to open the match interface.
+  This will open up the match modal.
+  
+  **Match**
+
+
+  <img src="./screenshot/match_ui_modal.png" height="200px">
+  
+  There is an input textbox and 3 button here: `Create`, `Join`, `Status`.
+  
+  Pressing `Create` will update the input textbox with a new match ID. **warn: this will replace the match id currently listed.**
+  
+  You can copy and send this match ID to your friend or anyone you want. They can join by copying this match ID to the input box.
+
+  <img src="./screenshot/match_created.png" height="50px">
+  
+  Pressing `Join` with a valid match ID will let you join a match. This closes the modal and show a board and a `Finish` button.
+  
+  ![](screenshot/match_join.png)
+  
+  At this point you can play the game like in practice.
+  Once you finish, you can finish the game by putting your name in the input box on top right and pressing the `Finish` button.
+  
+  <img src="./screenshot/name_finish.png" height="50px">
+  
+  Pressing `Finish` will show an alert that match is updated.
+  
+  Now you can check the match status. Open the Match modal again and press status with a valid match ID.
+  
+  **Match Status**
+  
+  If the match is ongoing, it will only show the match status.
+  
+  <img src="./screenshot/ongoing_status.png" height="200px">
+  
+  If the match is finished, it will show extra information such as the board and player names, scores and words used.
+  
+  ![](screenshot/finished_status.png)
+  
+
 ## Setup
 
 * **Project Structure**
@@ -266,7 +324,7 @@ Create a new match entry in the database. This entry records all things related 
   
   run with `flask run` and application will run on default port 5000
   
-  Accessing through browser(`<host>/boggle/game`) would need to change API URL host to `127.0.0.1` or `localhost` at port 5000
+  Accessing through browser(`<host>/boggle/game`) would require changing the API URL host to `127.0.0.1` or `localhost` at port 5000
 
 ## Design Details
 
@@ -332,8 +390,9 @@ Create a new match entry in the database. This entry records all things related 
   
 ## Application Detail
 
-- Deployed on Amazon AWS EC2 Asia(Singapore)
-- Deployed with Apache 2 - Mod_wsgi(python wsgi apache mod)
+- Deployed on Amazon AWS EC2 Asia(Singapore) - Ubuntu 16.04
+- Deployed with Apache2 - Mod_wsgi(python wsgi apache mod)
 - Developed with Flask - Python 3.6
 - SQLite database
+- Redis
   
